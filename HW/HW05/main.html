@@ -39,10 +39,10 @@
             context.clearRect(0, 0, canvas.width, canvas.height);
 
             // 파란색 사각형 중심 좌표 계산
-            var blueRectCenterX = centerX + Math.cos(blueRect) * blueRectDistance;
+            var blueRectCenterX = centerX - Math.cos(blueRect) * blueRectDistance;
             var blueRectCenterY = centerY + Math.sin(blueRect) * blueRectDistance;
     
-            var greyRectCenterX = blueRectCenterX + Math.cos(greyRect) * greyRectDistance;
+            var greyRectCenterX = blueRectCenterX - Math.cos(greyRect) * greyRectDistance;
             var greyRectCenterY = blueRectCenterY - Math.sin(greyRect) * greyRectDistance;
 
            // 태양 사각형 그리기 
