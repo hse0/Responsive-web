@@ -1,0 +1,12 @@
+반응형 웹 시험
+
+원과 원의 접점 구하기
+
+총을 쏘는 사람 움직임 총알 회전 랜덤값
+
+Transform 종류 3가지 
+
+rotate(회전 효과) rotateX(), rotateY(), rotate(x, y)
+scale(확대/축소 효과) scaleX(), scaleY(), scale(x, y)
+Translate(이동 효과)translateX(), translateY(), translate(x, y)
+
