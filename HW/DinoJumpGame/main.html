@@ -58,7 +58,7 @@
     function jump() {
         if (!dino.isJumping) {
             dino.isJumping = true;
-            let jumpHeight = 200, jumpSpeed = 10, fallSpeed = 5;
+            let jumpHeight = 200, jumpSpeed = 10, fallSpeed = 10;
             let jumpInterval = setInterval(() => {
                 if (dino.y <= canvas.height - jumpHeight) { clearInterval(jumpInterval); let fallInterval = setInterval(() => { if (dino.y >= canvas.height - dino.height) { clearInterval(fallInterval); dino.isJumping = false; } else { dino.y += fallSpeed; } }, 20); } else { dino.y -= jumpSpeed; }
             }, 20);
