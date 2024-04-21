@@ -1,0 +1,133 @@
+1. Transform - Translate / Rotation / Scale 세가지에 대한 수행
+
+
+HTML을 사용하여 간단한 설명을 작성해 보겠습니다. 아래는 Translate(이동), Rotation(회전), Scale(크기 조절) 변환을 HTML로 설명한 예시입니다.
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformations</title>
+    <style>
+        #box {
+            width: 100px;
+            height: 100px;
+            background-color: red;
+            transition: transform 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <h2>Transformations</h2>
+
+    <div>
+        <h3>Translation (이동)</h3>
+        <p>이동 변환은 객체를 지정된 거리만큼 이동시킵니다.</p>
+        <div id="translateExample" style="position: relative;">
+            <div id="box"></div>
+        </div>
+        <button onclick="translate()">이동하기</button>
+    </div>
+
+    <div>
+        <h3>Rotation (회전)</h3>
+        <p>회전 변환은 객체를 주어진 각도만큼 회전시킵니다.</p>
+        <div id="rotateExample" style="position: relative;">
+            <div id="box" style="background-color: blue;"></div>
+        </div>
+        <button onclick="rotate()">회전하기</button>
+    </div>
+
+    <div>
+        <h3>Scale (크기 조절)</h3>
+        <p>크기 조절 변환은 객체의 크기를 변경시킵니다.</p>
+        <div id="scaleExample" style="position: relative;">
+            <div id="box" style="background-color: green;"></div>
+        </div>
+        <button onclick="scale()">크기 조절하기</button>
+    </div>
+
+    <script>
+        function translate() {
+            document.getElementById("box").style.transform = "translate(50px, 50px)";
+        }
+
+        function rotate() {
+            document.getElementById("box").style.transform = "rotate(45deg)";
+        }
+
+        function scale() {
+            document.getElementById("box").style.transform = "scale(1.5)";
+        }
+    </script>
+</body>
+</html>
+
+
+HTML을 사용하여 간단한 설명을 작성해 보겠습니다. 아래는 Translate(이동), Rotation(회전), Scale(크기 조절) 변환을 HTML로 설명한 예시입니다.
+
+html
+Copy code
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformations</title>
+    <style>
+        #box {
+            width: 100px;
+            height: 100px;
+            background-color: red;
+            transition: transform 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <h2>Transformations</h2>
+
+    <div>
+        <h3>Translation (이동)</h3>
+        <p>이동 변환은 객체를 지정된 거리만큼 이동시킵니다.</p>
+        <div id="translateExample" style="position: relative;">
+            <div id="box"></div>
+        </div>
+        <button onclick="translate()">이동하기</button>
+    </div>
+
+    <div>
+        <h3>Rotation (회전)</h3>
+        <p>회전 변환은 객체를 주어진 각도만큼 회전시킵니다.</p>
+        <div id="rotateExample" style="position: relative;">
+            <div id="box" style="background-color: blue;"></div>
+        </div>
+        <button onclick="rotate()">회전하기</button>
+    </div>
+
+    <div>
+        <h3>Scale (크기 조절)</h3>
+        <p>크기 조절 변환은 객체의 크기를 변경시킵니다.</p>
+        <div id="scaleExample" style="position: relative;">
+            <div id="box" style="background-color: green;"></div>
+        </div>
+        <button onclick="scale()">크기 조절하기</button>
+    </div>
+
+    <script>
+        function translate() {
+            document.getElementById("box").style.transform = "translate(50px, 50px)";
+        }
+
+        function rotate() {
+            document.getElementById("box").style.transform = "rotate(45deg)";
+        }
+
+        function scale() {
+            document.getElementById("box").style.transform = "scale(1.5)";
+        }
+    </script>
+</body>
+</html>
+이 예제에서는 각 변환에 대한 버튼을 클릭하면 해당 변환을 객체에 적용합니다. Translate(이동)은 객체를 오른쪽 아래로 이동시키고, Rotation(회전)은 객체를 45도 회전시키고, Scale(크기 조절)은 객체의 크기를 1.5배로 조절합니다.

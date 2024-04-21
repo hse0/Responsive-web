@@ -1,0 +1,42 @@
+2. Animation에 대한 내용
+
+여기 쉽게 이해할 수 있는 애니메이션 예제가 있습니다. 이 예제는 정사각형이 왼쪽에서 오른쪽으로 이동하는 간단한 애니메이션을 보여줍니다.
+ 정사각형은 3초에 걸쳐 이동하며, 애니메이션은 무한 반복됩니다.
+
+
+Copy c
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Animation Example</title>
+<style>
+    /* 정사각형 스타일 */
+    #square {
+        width: 100px;
+        height: 100px;
+        background-color: blue;
+        position: relative;
+        animation: moveSquare 3s linear infinite; /* 애니메이션 속성 설정 */
+    }
+
+    /* 애니메이션 정의 */
+    @keyframes moveSquare {
+        0% {
+            left: 0; /* 시작 지점 */
+        }
+        100% {
+            left: calc(100% - 100px); /* 끝 지점: 화면 가로 길이에서 정사각형의 가로 길이를 뺌 */
+        }
+    }
+</style>
+</head>
+<body>
+<!-- 정사각형 -->
+<div id="square"></div>
+</body>
+</html>
+
+이 코드에서는 CSS의 @keyframes를 사용하여 moveSquare라는 애니메이션을 정의합니다. 이 애니메이션은 정사각형이 0%부터 100%까지의 시간 동안 왼쪽에서 오른쪽으로 움직이는 것을 나타냅니다. 
+그리고 animation 속성을 사용하여 이 애니메이션을 정사각형에 적용합니다. 설정된 애니메이션은 3초 동안 선형으로 실행되며, 무한 반복됩니다.

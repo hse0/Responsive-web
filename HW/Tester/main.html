@@ -3,153 +3,224 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flappy Bird</title>
+<title>Canvas Game</title>
 <style>
+    /* CSS 스타일 설정 */
+
+    /* body와 html 요소의 마진과 패딩을 모두 0으로 설정하고, 화면을 가운데 정렬 */
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* 캔버스에 점선 테두리 스타일 적용 */
     canvas {
-        border: 1px dashed black; /* 점선 스타일의 흰색 테두리 */
+        border: 2px dotted green; /* 점선 테두리의 색상을 녹색으로 설정 */
         display: block;
-        margin: 700px auto 0; /* 상단 마진 추가 */
-        background-color: white; /*/* 캔버스 배경색 흰색으로 설정 */
+    }
+
+    /* 시작 버튼 컨테이너 스타일 설정 */
+    #startButtonContainer {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    /* 시작 및 재시작 버튼의 공통 스타일 설정 */
+    #startButton, #restartButton {
+        width: 500px;
+        height: 150px;
+        font-size: 50px;
     }
 </style>
 </head>
 <body>
-    <canvas id="canvas" width="1500" height="2000"></canvas>
+<div id="startButtonContainer">
+    <!-- 시작 버튼과 재시작 버튼 -->
+    <button id="startButton">Start Game</button>
+    <button id="restartButton" style="display: none;">Restart Game</button>
+</div>
+<!-- 게임 캔버스 -->
+<canvas id="gameCanvas" width="3000" height="2000"></canvas>
 <script>
-    const canvas = document.getElementById("canvas");
-    const context = canvas.getContext("2d");
+    // 자바스크립트 코드
 
-    // Bird
-    const bird = {
-        x: 50,
-        y: canvas.height / 2,
-        radius: 30,
-        velocityY: 0,
-        gravity: 0.5
-    };
+    // 캔버스 요소와 그리기 컨텍스트 가져오기
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
 
-    // Pipes
-    const pipes = [];
-    const pipeWidth = 50;
-    const initialPipeGap = 200;
-    let pipeTimer = 0;
-    let isGameOver = false;
+    // 플레이어 크기와 속도 설정
+    const playerWidth = 100;
+    const playerHeight = 100;
+    const playerSpeed = 20;
 
-    function createPipe() {
-        const gap = initialPipeGap * Math.pow(0.95, pipes.length);
-        const pipeHeight = Math.random() * (canvas.height - gap * 2) + gap;
-        const pipeColor = getRandomPipeColor(); // 랜덤 파이프 색상 생성
-        pipes.push({ x: canvas.width, y: 0, height: pipeHeight, color: pipeColor });
-        pipes.push({ x: canvas.width, y: pipeHeight + gap, height: canvas.height - pipeHeight - gap, color: pipeColor });
-    }
+    let playerX; // 플레이어의 X 좌표
+    let playerY; // 플레이어의 Y 좌표
 
-    
-    function drawPipes() {
-    for (let i = 0; i < pipes.length; i++) {
-        const p = pipes[i];
-        context.fillStyle = p.color; // 파이프 색상 설정
-        
-        // 파이프 그리기
-        context.fillRect(p.x, p.y, pipeWidth, p.height);
-    }
-}
+    // 이전 플레이어 위치를 저장하는 변수들
+    let initialPlayerX;
+    let initialPlayerY;
 
-function updatePipes() {
-    if (!isGameOver) {
-        pipeTimer++;
-        const pipeInterval = Math.floor(Math.random() * 61) + 240; // 4초에서 5초 사이의 랜덤 값
-        if (pipeTimer === pipeInterval) {
-            createPipe();
-            pipeTimer = 0;
+    let gameLoop; // 게임 루프 변수
+    let decreaseCanvasSizeInterval; // 캔버스 크기 감소 루프 변수
+    let gameOver = false; // 게임 종료 여부 플래그
+
+    const keys = {}; // 키보드 입력을 저장하는 객체
+
+    // 키 다운 이벤트 핸들러 함수
+    function keyDownHandler(event) {
+        if (!gameOver) {
+            keys[event.key] = true;
         }
     }
 
-    // 이하 생략
+    // 키 업 이벤트 핸들러 함수
+    function keyUpHandler(event) {
+        if (!gameOver) {
+            keys[event.key] = false;
+        }
+    }
 
+    // 플레이어 그리기 함수
+    function drawPlayer() {
+        ctx.fillStyle = 'gray';
+        ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
+    }
 
-        for (let i = 0; i < pipes.length; i++) {
-            const p = pipes[i];
-            p.x -= 2;
-            if (p.x + pipeWidth < 0) {
-                pipes.splice(i, 1);
-                i--;
+    // 캔버스 초기화 함수
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // 캔버스 업데이트 함수
+    function update() {
+        clearCanvas();
+        drawPlayer();
+    }
+
+    // 플레이어 이동 함수
+    function movePlayer() {
+        if (gameOver) return; // 게임 종료 상태에서는 플레이어 이동 중지
+
+        let dx = 0;
+        let dy = 0;
+        if (keys['a']) dx -= 1;
+        if (keys['d']) dx += 1;
+        if (keys['w']) dy -= 1;
+        if (keys['s']) dy += 1;
+
+        playerX += dx * playerSpeed;
+        playerY += dy * playerSpeed;
+
+        // 플레이어가 화면을 벗어나지 않도록 제한
+        playerX = Math.max(0, Math.min(playerX, canvas.width - playerWidth));
+        playerY = Math.max(0, Math.min(playerY, canvas.height - playerHeight));
+
+        // 플레이어가 화면을 벗어나면 게임 종료
+        checkCollision();
+    }
+
+    // 캔버스 크기 줄이기 함수
+    function decreaseCanvasSize() {
+        if (!gameOver) {
+            // 랜덤한 값으로 캔버스 크기를 줄임
+            const decreaseAmount = Math.floor(Math.random() * 100) + 50; // 50부터 150까지의 랜덤한 값
+            const centerX = playerX + playerWidth / 2; // 이전 중점의 x좌표
+            const centerY = playerY + playerHeight / 2; // 이전 중점의 y좌표
+            canvas.width -= decreaseAmount;
+            canvas.height -= decreaseAmount;
+            // 중간에서 시작하도록 플레이어 위치 업데이트
+            playerX = centerX - playerWidth / 2; // 새로운 중점을 기준으로 사각형의 x좌표 조정
+            playerY = centerY - playerHeight / 2; // 새로운 중점을 기준으로 사각형의 y좌표 조정
+        }
+    }
+
+    // 충돌 감지 함수
+    function checkCollision() {
+        if (
+            playerX <= 0 || // 왼쪽 경계와 충돌
+            playerX + playerWidth >= canvas.width || // 오른쪽 경계와 충돌
+            playerY <= 0 || // 위쪽 경계와 충돌
+            playerY + playerHeight >= canvas.height // 아래쪽 경계와 충돌
+        ) {
+            gameOver = true; // 게임 종료
+            clearInterval(gameLoop); // 게임 루프를 중지
+            const restartButton = document.getElementById('restartButton');
+            restartButton.style.display = 'block'; // 재시작 버튼 표시
+            const startButton = document.getElementById('startButton');
+            startButton.style.display = 'none'; // 시작 버튼 숨기기
+            // 게임 종료 시에 이벤트 리스너 제거
+            window.removeEventListener('keydown', keyDownHandler);
+            window.removeEventListener('keyup', keyUpHandler);
+        }
+    }
+
+    // 게임 초기화 함수
+    function resetGame() {
+        clearInterval(gameLoop); // 게임 루프 중지
+        clearInterval(decreaseCanvasSizeInterval); // 캔버스 크기 줄이기 기능 중지
+        const restartButton = document.getElementById('restartButton');
+        restartButton.style.display = 'none'; // 재시작 버튼 숨기기
+        const startButton = document.getElementById('startButton');
+        startButton.style.display = 'block'; // 시작 버튼 표시
+        canvas.width = 3000; // 캔버스 크기 초기화
+        canvas.height = 2000;
+        gameOver = false; // 게임 종료 플래그 초기화
+        
+        // 플레이어를 캔버스의 정 가운데로 이동
+        playerX = canvas.width / 2 - playerWidth / 2;
+        playerY = canvas.height / 2 - playerHeight / 2;
+
+        keys['a'] = false;
+        keys['d'] = false;
+        keys['w'] = false;
+        keys['s'] = false;
+
+        startGame(); // 게임 다시 시작
+    }
+
+    // 게임 시작 함수
+    function startGame() {
+        gameOver = false; // 게임 시작 시 게임 종료 플래그 초기화
+        // 플레이어를 캔버스의 정 가운데로 이동
+        playerX = canvas.width / 2 - playerWidth / 2;
+        playerY = canvas.height / 2 - playerHeight / 2;
+        // 이전 플레이어 위치 저장
+      // initialPlayerX = playerX;
+      //  initialPlayerY = playerY;
+        // 게임 루프 설정
+        gameLoop = setInterval(function() {
+            if (!gameOver) {
+                movePlayer();
+                update(); // 플레이어를 그리는 함수 호출
             }
-        }
-        
-        // Check collision with bird
-        for (let i = 0; i < pipes.length; i += 2) {
-            const upperPipe = pipes[i];
-            const lowerPipe = pipes[i + 1];
-            if (!isGameOver && bird.x + bird.radius > upperPipe.x && bird.x - bird.radius < upperPipe.x + pipeWidth &&
-                (bird.y - bird.radius < upperPipe.y + upperPipe.height || bird.y + bird.radius > lowerPipe.y)) {
-                gameOver();
-                return; // Stop updating pipes if collision occurs
-            }
-        }
-        
-        // Check if bird hits the bottom
-        if (bird.y + bird.radius > canvas.height) {
-            gameOver();
-        }
+        }, 1000 / 60); // 60fps로 설정
+
+        // 2초마다 캔버스 크기를 줄이는 기능 추가
+        decreaseCanvasSizeInterval = setInterval(decreaseCanvasSize, 2000);
+
+        // 게임 시작 시에 이벤트 리스너 추가
+        window.addEventListener('keydown', keyDownHandler);
+        window.addEventListener('keyup', keyUpHandler);
+
+        // 시작 버튼 숨기기
+        const startButton = document.getElementById('startButton');
+        startButton.style.display = 'none';
     }
 
-    // Generate random pipe color
-    function getRandomPipeColor() {
-        const colors = ["green", "red", "blue", "yellow", "orange"]; // 파이프 색상 목록
-        return colors[Math.floor(Math.random() * colors.length)]; // 랜덤 색상 반환
-    }
-
-    // Game Over
-    function gameOver() {
-        isGameOver = true;
-        
-        // Draw white background for game over screen
-        context.fillStyle = "white";
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Draw game over text in black
-        context.fillStyle = "black";
-        context.font = "100px Arial"; // Decreased font size
-        context.fillText("Game Over", canvas.width / 2 - 250, canvas.height / 2);
-    }
-
-    function drawBird() {
-        context.beginPath();
-        context.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
-        context.fillStyle = "Black";
-        context.fill();
-        context.closePath();
-    }
-
-    function updateBird() {
-        bird.velocityY += bird.gravity;
-        bird.y += bird.velocityY;
-    }
-
-    // Controls
-    document.addEventListener("keydown", function(event) {
-        if (event.code === "Space" && !isGameOver) {
-            bird.velocityY = -10;
-        }
+    // 게임 시작 및 재시작 버튼 클릭 이벤트 처리
+    document.getElementById('startButton').addEventListener('click', function() {
+        startGame(); // 게임 시작 함수 호출
     });
 
-    // Game Loop
-    let animationID;
-    function draw() {
-        // Clear canvas
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        
-        drawBird();
-        updateBird();
-        drawPipes();
-        updatePipes();
-        if (!isGameOver) {
-            animationID = requestAnimationFrame(draw);
-        }
-    }
+    document.getElementById('restartButton').addEventListener('click', function() {
+        resetGame(); // 게임 초기화 함수 호출
+    });
 
-    createPipe();
-    draw();
 </script>
 </body>
 </html>

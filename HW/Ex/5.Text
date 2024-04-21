@@ -1,0 +1,39 @@
+5. 마우스와 키보드 컨트롤
+
+마우스 이벤트: 
+click: 마우스를 클릭할 때 발생합니다.
+mousedown: 마우스 버튼을 누르는 순간에 발생합니다.
+mouseup: 마우스 버튼을 놓을 때 발생합니다.
+mousemove: 마우스를 움직일 때 발생합니다.
+mouseover: 마우스 포인터가 요소 위로 이동할 때 발생합니다.
+mouseout: 마우스 포인터가 요소에서 벗어날 때 발생합니다.
+
+<button id="myButton">Click me</button>
+
+<script>
+    var button = document.getElementById('myButton');
+    
+    button.addEventListener('click', function(event) {
+        alert('Button clicked!');
+    });
+</script>
+
+
+키보드 이벤트:
+keydown: 키를 누를 때 발생합니다.
+keyup: 키를 놓을 때 발생합니다.
+keypress: 키를 누를 때 문자를 입력할 때 발생합니다. (주로 문자 키에 대해 작동)
+
+<script>
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'ArrowUp') {
+            // 위 화살표 키가 눌렸을 때
+            // 처리할 내용
+        }
+    });
+</script>
+
+
+
+
+

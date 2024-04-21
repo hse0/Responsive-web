@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flappy Bird</title>
+<style>
+    canvas {
+        border: 1px dashed black; /* 점선 스타일의 흰색 테두리 */
+        display: block;
+        margin: 700px auto 0; /* 상단 마진 추가 */
+        background-color: white; /*/* 캔버스 배경색 흰색으로 설정 */
+    }
+</style>
+</head>
+<body>
+    <canvas id="canvas" width="1500" height="2000"></canvas>
+<script>
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+
+    // Bird
+    const bird = {
+        x: 50,
+        y: canvas.height / 2,
+        radius: 30,
+        velocityY: 0,
+        gravity: 0.5
+    };
+
+    // Pipes
+    const pipes = [];
+    const pipeWidth = 50;
+    const initialPipeGap = 200;
+    let pipeTimer = 0;
+    let isGameOver = false;
+
+    function createPipe() {
+        const gap = initialPipeGap * Math.pow(0.95, pipes.length);
+        const pipeHeight = Math.random() * (canvas.height - gap * 2) + gap;
+        const pipeColor = getRandomPipeColor(); // 랜덤 파이프 색상 생성
+        pipes.push({ x: canvas.width, y: 0, height: pipeHeight, color: pipeColor });
+        pipes.push({ x: canvas.width, y: pipeHeight + gap, height: canvas.height - pipeHeight - gap, color: pipeColor });
+    }
+
+    
+    function drawPipes() {
+    for (let i = 0; i < pipes.length; i++) {
+        const p = pipes[i];
+        context.fillStyle = p.color; // 파이프 색상 설정
+        
+        // 파이프 그리기
+        context.fillRect(p.x, p.y, pipeWidth, p.height);
+    }
+}
+
+function updatePipes() {
+    if (!isGameOver) {
+        pipeTimer++;
+        const pipeInterval = Math.floor(Math.random() * 61) + 240; // 4초에서 5초 사이의 랜덤 값
+        if (pipeTimer === pipeInterval) {
+            createPipe();
+            pipeTimer = 0;
+        }
+    }
+
+    // 이하 생략
+
+
+        for (let i = 0; i < pipes.length; i++) {
+            const p = pipes[i];
+            p.x -= 2;
+            if (p.x + pipeWidth < 0) {
+                pipes.splice(i, 1);
+                i--;
+            }
+        }
+        
+        // Check collision with bird
+        for (let i = 0; i < pipes.length; i += 2) {
+            const upperPipe = pipes[i];
+            const lowerPipe = pipes[i + 1];
+            if (!isGameOver && bird.x + bird.radius > upperPipe.x && bird.x - bird.radius < upperPipe.x + pipeWidth &&
+                (bird.y - bird.radius < upperPipe.y + upperPipe.height || bird.y + bird.radius > lowerPipe.y)) {
+                gameOver();
+                return; // Stop updating pipes if collision occurs
+            }
+        }
+        
+        // Check if bird hits the bottom
+        if (bird.y + bird.radius > canvas.height) {
+            gameOver();
+        }
+    }
+
+    // Generate random pipe color
+    function getRandomPipeColor() {
+        const colors = ["green", "red", "blue", "yellow", "orange"]; // 파이프 색상 목록
+        return colors[Math.floor(Math.random() * colors.length)]; // 랜덤 색상 반환
+    }
+
+    // Game Over
+    function gameOver() {
+        isGameOver = true;
+        
+        // Draw white background for game over screen
+        context.fillStyle = "white";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw game over text in black
+        context.fillStyle = "black";
+        context.font = "100px Arial"; // Decreased font size
+        context.fillText("Game Over", canvas.width / 2 - 250, canvas.height / 2);
+    }
+
+    function drawBird() {
+        context.beginPath();
+        context.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
+        context.fillStyle = "Black";
+        context.fill();
+        context.closePath();
+    }
+
+    function updateBird() {
+        bird.velocityY += bird.gravity;
+        bird.y += bird.velocityY;
+    }
+
+    // Controls
+    document.addEventListener("keydown", function(event) {
+        if (event.code === "Space" && !isGameOver) {
+            bird.velocityY = -10;
+        }
+    });
+
+    // Game Loop
+    let animationID;
+    function draw() {
+        // Clear canvas
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        
+        drawBird();
+        updateBird();
+        drawPipes();
+        updatePipes();
+        if (!isGameOver) {
+            animationID = requestAnimationFrame(draw);
+        }
+    }
+
+    createPipe();
+    draw();
+</script>
+</body>
+</html>

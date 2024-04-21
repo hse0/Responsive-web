@@ -1,0 +1,6 @@
+3. Box Collision (AABB) / Circle Collision (Distance) 에 대한 내용
+
+원1 과 원2 가 겹쳐져 있는 상황에서 원1의 반지름을 x1, 원2의 반지름을 y1 
+x1+y1 > distance 충돌된 상태
+
+사각형1 과 사각형2 가 겹쳐져 있는 상황에서 AABB 가 성립한다
