@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24 : Reactive: Midterm Game</title>
+    <style>
+        body {
+            margin: 20px;
+            padding: 0;
+            background-color: rgb(72, 153, 242);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #canvasContainer {
+            position: relative;
+            width: 600px;
+            height: 800px;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgb(255, 255, 255);
+            box-sizing: border-box;
+        }
+
+        #startButton {
+            position: absolute;
+            left: 50%;
+            bottom: 200px;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            background-color: #c8c7c7;
+            transition: background-color 0.3s ease;
+        }
+
+        #startButton:hover {
+            background-color: rgb(218, 218, 158);
+        }
+
+        #startButton:active {
+            background-color: rgb(7, 58, 239);
+        }
+
+        #canvasText {
+            position: absolute;
+            left: 50%;
+            top: 20px;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .hidden {
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvasContainer">
+        <canvas id="myCanvas" width="640" height="720"></canvas>
+        <div id="canvasText">
+            <p>안녕하세요 교수님</p>
+            <p>3단계를 뺀 1단계부터 5단계를 구현 완료 하였습니다..
+                네... 노력..했습니다..네.. 올바르게 한거 같은데 네.. 
+                잘 모르겠습니다......
+            </p>
+        </div>
+    </div>
+    <button id="startButton">시작</button>
+
+    <script>
+        var canvas = document.getElementById('myCanvas');
+        var ctx = canvas.getContext('2d');
+        var starX, starY;
+        var playerX = canvas.width / 2;
+        var playerY = canvas.height / 2;
+        var playerSpeed = 2;
+        var starSpeed = 2;
+        var playerAngle = 0;
+        var rotationSpeed = 0.1;
+        var enemies = [];
+        var heartHealth = 3;
+        var animationId;
+        var intervalId;
+        var gameEnded = false;
+
+        function drawStar(x, y) {
+            ctx.beginPath();
+            ctx.moveTo(x, y - 30);
+            ctx.lineTo(x + 10, y - 10);
+            ctx.lineTo(x + 40, y - 5);
+            ctx.lineTo(x + 15, y + 5);
+            ctx.lineTo(x + 25, y + 30);
+            ctx.lineTo(x, y + 15);
+            ctx.lineTo(x - 25, y + 30);
+            ctx.lineTo(x - 15, y + 5);
+            ctx.lineTo(x - 40, y - 5);
+            ctx.lineTo(x - 10, y - 10);
+            ctx.closePath();
+            ctx.fillStyle = 'yellow';
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        function drawHeart(x, y, angle) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.moveTo(0, -30);
+            ctx.bezierCurveTo(20, -50, 60, -20, 0, 30);
+            ctx.bezierCurveTo(-60, -20, -20, -50, 0, -30);
+            ctx.fillStyle = 'rgb(192, 0, 0)';
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function update() {
+            clearCanvas();
+            checkPlayerCollisionWithStar(); // 플레이어와 별의 충돌 확인
+            drawHeart(canvas.width / 2, canvas.height / 2, playerAngle);
+            drawStar(starX, starY);
+            drawEnemies();
+        }
+
+        function autoRotate() {
+            if (!gameEnded) {
+                playerAngle += rotationSpeed;
+                update();
+                animationId = requestAnimationFrame(autoRotate);
+            }
+        }
+
+        var startButton = document.getElementById('startButton');
+        startButton.addEventListener('click', function() {
+            startButton.style.display = 'none';
+            document.getElementById('canvasContainer').style.border = 'none';
+            document.getElementById('canvasText').classList.add('hidden');
+            var enemyCount = Math.floor(Math.random() * 11) + 5;
+            for (var i = 0; i < enemyCount; i++) {
+                createEnemy();
+            }
+            drawRandomStar();
+            autoRotate();
+            intervalId = setInterval(function() {
+                createEnemy();
+            }, 1000);
+        });
+
+        function drawRandomStar() {
+            starX = Math.random() * canvas.width;
+            starY = Math.random() * canvas.height;
+            update();
+        }
+
+        function createEnemy() {
+            var angle = Math.random() * Math.PI * 2;
+            var startX = Math.random() * canvas.width;
+            var startY = Math.random() * canvas.height;
+
+            if (Math.random() < 0.5) {
+                startX = Math.random() < 0.5 ? -canvas.width : canvas.width * 1.5;
+            } else {
+                startY = Math.random() < 0.5 ? -canvas.height : canvas.height * 1.5;
+            }
+            var speed = Math.random() * 3 + 1;
+            var enemy = {
+                x: startX,
+                y: startY,
+                radius: Math.random() * 10 + 5,
+                color: getRandomColor(),
+                speed: speed
+            };
+            enemy.speedX = Math.cos(angle)
+            * enemy.speed;
+            enemy.speedY = Math.sin(angle) * enemy.speed;
+            enemies.push(enemy);
+        }
+
+        function drawEnemies() {
+            for (var i = 0; i < enemies.length; i++) {
+                var enemy = enemies[i];
+                moveTowardsCenter(enemy);
+                drawCircle(enemy.x, enemy.y, enemy.radius, enemy.color);
+                if (isColliding(enemy)) {
+                    enemies.splice(i, 1);
+                    heartHealth--;
+                    if (heartHealth <= 0) {
+                        endGame();
+                    }
+                    i--;
+                }
+            }
+        }
+
+        function moveTowardsCenter(enemy) {
+            var dx = canvas.width / 2 - enemy.x;
+            var dy = canvas.height / 2 - enemy.y;
+            var distance = Math.sqrt(dx * dx + dy * dy);
+            var speed = enemy.speed;
+            if (distance > 1) {
+                enemy.x += dx / distance * speed;
+                enemy.y += dy / distance * speed;
+            }
+        }
+
+        function isColliding(enemy) {
+            var dx = playerX - enemy.x;
+            var dy = playerY - enemy.y;
+            var distance = Math.sqrt(dx * dx + dy * dy);
+            return distance < enemy.radius + 30;
+        }
+
+        function checkPlayerCollisionWithStar() {
+            var dx = playerX - starX;
+            var dy = playerY - starY;
+            var distance = Math.sqrt(dx * dx + dy * dy);
+            var playerRadius = 30; // 플레이어 반지름
+            var starRadius = 40; // 별 반지름
+
+            if (distance < playerRadius + starRadius) {
+                // 플레이어가 별에 내접하면 무언가를 수행하거나 상태를 변경할 수 있습니다.
+                // 예를 들어:
+                // console.log("플레이어가 별에 내접했습니다!");
+            }
+        }
+
+        function getRandomColor() {
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function drawCircle(x, y, radius, color) {
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function endGame() {
+            clearCanvas();
+            gameEnded = true;
+            cancelAnimationFrame(animationId);
+            clearInterval(intervalId);
+            startButton.style.display = 'block';
+            document.getElementById('canvasText').getElementsByTagName('p')[0].textContent = "교수님!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+            document.getElementById('canvasText').getElementsByTagName('p')[1].textContent = '올바르게 한거 같은데 네.. 잘 모르겠습니다......';
+            document.getElementById('canvasText').classList.remove('hidden');
+            document.getElementById('canvasContainer').style.border = '1px solid rgb(0, 0, 0)';
+            document.getElementById('canvasContainer').style.backgroundColor = 'rgb(255, 0, 0)';
+            document.getElementById('canvasText').style.color = 'rgb(255, 255, 255)';
+            enemies = [];
+            heartHealth = 3;
+            startButton.addEventListener('click', startGame);
+        }
+
+        function startGame() {
+            gameEnded = false;
+            startButton.style.display = 'none';
+            document.getElementById('canvasText').classList.add('hidden');
+            var enemyCount = Math.floor(Math.random() * 11) + 5;
+            for (var i = 0; i < enemyCount; i++) {
+                createEnemy();
+            }
+            drawRandomStar();
+            autoRotate();
+            intervalId = setInterval(function() {
+                createEnemy();
+            }, 1000);
+            document.getElementById('canvasContainer').style.border = '1px solid rgb(255, 255, 255)';
+            document.getElementById('canvasContainer').style.backgroundColor = 'rgb(72, 153, 242)';
+            document.getElementById('canvasText').style.color = 'white';
+            startButton.removeEventListener('click', startGame);
+        }
+    </script>
+</body>
+</html>

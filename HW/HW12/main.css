@@ -1,0 +1,18 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: rgb(72, 153, 242); /* HTML 배경색 설정 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+canvas {
+    background-color: rgb(180, 180, 180); /* 캔버스 배경색 설정 */
+    margin-top: 50px; /* 상단 간격 설정 */
+    margin-bottom: 50px; /* 하단 간격 설정 */
+    display: block; /* 블록 요소로 설정하여 중앙 정렬을 위한 margin을 사용할 수 있도록 함 */
+    width: 600px; /* 가로 크기 설정 */
+    height: 800px; /* 세로 크기 설정 */
+}
