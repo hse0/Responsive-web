@@ -104,6 +104,33 @@
         var animationId;
         var intervalId;
         var gameEnded = false;
+        var keys = {};
+
+        // 스택 생성
+        var enemyStack = [];
+
+        document.addEventListener('keydown', function(event) {
+            keys[event.code] = true;
+        });
+
+        document.addEventListener('keyup', function(event) {
+            keys[event.code] = false;
+        });
+
+        function movePlayer() {
+            if (keys['ArrowUp'] || keys['KeyW']) {
+                playerY -= playerSpeed;
+            }
+            if (keys['ArrowDown'] || keys['KeyS']) {
+                playerY += playerSpeed;
+            }
+            if (keys['ArrowLeft'] || keys['KeyA']) {
+                playerX -= playerSpeed;
+            }
+            if (keys['ArrowRight'] || keys['KeyD']) {
+                playerX += playerSpeed;
+            }
+        }
 
         function drawStar(x, y) {
             ctx.beginPath();
@@ -145,19 +172,28 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
+        function drawHUD() {
+            ctx.font = '24px Arial';
+            ctx.fillStyle = 'white';
+            ctx.fillText('HP: ' + heartHealth, 20, 40);
+        }
+
         function update() {
             clearCanvas();
-            checkPlayerCollisionWithStar(); // 플레이어와 별의 충돌 확인
+            movePlayer();
+            checkPlayerCollisionWithStar();
             drawHeart(canvas.width / 2, canvas.height / 2, playerAngle);
-            drawStar(starX, starY);
+            drawStar(starX - playerX + canvas.width / 2, starY - playerY + canvas.height / 2);
             drawEnemies();
+            drawHUD();
         }
 
         function autoRotate() {
             if (!gameEnded) {
                 playerAngle += rotationSpeed;
                 update();
-                animationId = requestAnimationFrame(autoRotate);
+                animationId = requestAnimationFrame
+                (autoRotate);
             }
         }
 
@@ -178,8 +214,9 @@
         });
 
         function drawRandomStar() {
-            starX = Math.random() * canvas.width;
-            starY = Math.random() * canvas.height;
+            var margin = 40; 
+            starX = Math.random() * (canvas.width - 2 * margin) + margin;
+            starY = Math.random() * (canvas.height - 2 * margin) + margin;
             update();
         }
 
@@ -199,21 +236,20 @@
                 y: startY,
                 radius: Math.random() * 10 + 5,
                 color: getRandomColor(),
-                speed: speed
+                speed: speed,
+                speedX: Math.cos(angle) * speed, // 수정: speedX 및 speedY 추가
+                speedY: Math.sin(angle) * speed
             };
-            enemy.speedX = Math.cos(angle)
-            * enemy.speed;
-            enemy.speedY = Math.sin(angle) * enemy.speed;
-            enemies.push(enemy);
+            enemyStack.push(enemy);
         }
-
+        
         function drawEnemies() {
-            for (var i = 0; i < enemies.length; i++) {
-                var enemy = enemies[i];
+            for (var i = 0; i < enemyStack.length; i++) {
+                var enemy = enemyStack[i];
                 moveTowardsCenter(enemy);
-                drawCircle(enemy.x, enemy.y, enemy.radius, enemy.color);
+                drawCircle(enemy.x - playerX + canvas.width / 2, enemy.y - playerY + canvas.height / 2, enemy.radius, enemy.color);
                 if (isColliding(enemy)) {
-                    enemies.splice(i, 1);
+                    enemyStack.splice(i, 1);
                     heartHealth--;
                     if (heartHealth <= 0) {
                         endGame();
@@ -245,13 +281,11 @@
             var dx = playerX - starX;
             var dy = playerY - starY;
             var distance = Math.sqrt(dx * dx + dy * dy);
-            var playerRadius = 30; // 플레이어 반지름
-            var starRadius = 40; // 별 반지름
+            var playerRadius = 30; 
+            var starRadius = 40; 
 
             if (distance < playerRadius + starRadius) {
-                // 플레이어가 별에 내접하면 무언가를 수행하거나 상태를 변경할 수 있습니다.
-                // 예를 들어:
-                // console.log("플레이어가 별에 내접했습니다!");
+                console.log("플레이어가 별에 내접했습니다!");
             }
         }
 
@@ -278,13 +312,13 @@
             cancelAnimationFrame(animationId);
             clearInterval(intervalId);
             startButton.style.display = 'block';
-            document.getElementById('canvasText').getElementsByTagName('p')[0].textContent = "교수님!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
-            document.getElementById('canvasText').getElementsByTagName('p')[1].textContent = '올바르게 한거 같은데 네.. 잘 모르겠습니다......';
+            document.getElementById('canvasText').getElementsByTagName('p')[0].textContent = "교수님!";
+            document.getElementById('canvasText').getElementsByTagName('p')[1].textContent = '넵! 열심히 했습니다!!';
             document.getElementById('canvasText').classList.remove('hidden');
             document.getElementById('canvasContainer').style.border = '1px solid rgb(0, 0, 0)';
             document.getElementById('canvasContainer').style.backgroundColor = 'rgb(255, 0, 0)';
             document.getElementById('canvasText').style.color = 'rgb(255, 255, 255)';
-            enemies = [];
+            enemyStack = []; // 스택 초기화
             heartHealth = 3;
             startButton.addEventListener('click', startGame);
         }
