@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,13 +77,14 @@
         }
     </style>
 </head>
+
 <body>
     <div id="canvasContainer">
         <canvas id="myCanvas" width="640" height="720"></canvas>
         <div id="canvasText">
             <p>안녕하세요 교수님</p>
             <p>3단계를 뺀 1단계부터 5단계를 구현 완료 하였습니다..
-                네... 노력..했습니다..네.. 올바르게 한거 같은데 네.. 
+                네... 노력..했습니다..네.. 올바르게 한거 같은데 네..
                 잘 모르겠습니다......
             </p>
         </div>
@@ -101,19 +103,24 @@
         var rotationSpeed = 0.1;
         var enemies = [];
         var heartHealth = 3;
+        var starCount = 0; // 별 개수 추가
+        var hasShield = false; // 보호막 상태 추가
         var animationId;
         var intervalId;
         var gameEnded = false;
         var keys = {};
+        var firedHearts = []; // 발사된 하트를 저장하는 배열
+        var shieldActive = false;
+        var shieldSize = 30;
 
         // 스택 생성
         var enemyStack = [];
 
-        document.addEventListener('keydown', function(event) {
+        document.addEventListener('keydown', function (event) {
             keys[event.code] = true;
         });
 
-        document.addEventListener('keyup', function(event) {
+        document.addEventListener('keyup', function (event) {
             keys[event.code] = false;
         });
 
@@ -129,6 +136,29 @@
             }
             if (keys['ArrowRight'] || keys['KeyD']) {
                 playerX += playerSpeed;
+            }
+        }
+
+        var enemyHitCount = 0; // 파란색 하트에 맞은 적의 수를 기록하는 변수
+
+        function checkEnemyCollisionWithHearts() {
+            for (var i = 0; i < enemyStack.length; i++) {
+                var enemy = enemyStack[i];
+                for (var j = 0; j < firedHearts.length; j++) {
+                    var heart = firedHearts[j];
+                    var dx = heart.x - enemy.x;
+                    var dy = heart.y - enemy.y;
+                    var distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < enemy.radius + 30) {
+                        // 파란색 하트의 테두리에 닿으면 적을 제거합니다.
+                        enemyStack.splice(i, 1);
+                        // 발사된 하트 배열에서 제거합니다.
+                        firedHearts.splice(j, 1);
+                        enemyHitCount++; // 파란색 하트에 맞은 적의 수를 증가시킵니다.
+                        i--; // 현재의 인덱스를 감소시켜 다음 적을 확인할 수 있도록 합니다.
+                        break; // 하트는 한 번에 한 적에게만 닿을 수 있습니다.
+                    }
+                }
             }
         }
 
@@ -168,6 +198,19 @@
             ctx.restore();
         }
 
+        function drawShield(x, y, size) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.beginPath();
+            ctx.moveTo(0, -size);
+            ctx.bezierCurveTo(size * 0.67, -size * 1.67, size * 2, -size * 0.67, 0, size);
+            ctx.bezierCurveTo(-size * 2, -size * 0.67, -size * 0.67, -size * 1.67, 0, -size);
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.restore();
+        }
+
         function clearCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
@@ -176,29 +219,43 @@
             ctx.font = '24px Arial';
             ctx.fillStyle = 'white';
             ctx.fillText('HP: ' + heartHealth, 20, 40);
+            ctx.fillText('Enemies Hit: ' + enemyHitCount, 20, 80); // 파란색 하트에 맞은 적의 수를 표시합니다.
         }
+
+        var triangleX = Math.random() * (canvas.width - 60); // 삼각형의 초기 X 좌표를 랜덤으로 설정
+        var triangleY = Math.random() * (canvas.height - 60); // 삼각형의 초기 Y 좌표를 랜덤으로 설정
+
+        var triangleFixed = false;
 
         function update() {
             clearCanvas();
             movePlayer();
             checkPlayerCollisionWithStar();
             drawHeart(canvas.width / 2, canvas.height / 2, playerAngle);
+            if (hasShield && shieldActive) {
+                drawShield(canvas.width / 2, canvas.height / 2, shieldSize);
+            }
             drawStar(starX - playerX + canvas.width / 2, starY - playerY + canvas.height / 2);
+            if (!triangleFixed) { // 삼각형의 위치를 한 번만 설정하도록 합니다.
+                triangleFixed = true;
+                drawTriangle(triangleX, triangleY); // 삼각형을 초기 설정된 위치에 고정
+            }
             drawEnemies();
+            drawFiredHearts();
             drawHUD();
+            checkEnemyCollisionWithHearts();
         }
 
         function autoRotate() {
             if (!gameEnded) {
                 playerAngle += rotationSpeed;
                 update();
-                animationId = requestAnimationFrame
-                (autoRotate);
+                animationId = requestAnimationFrame(autoRotate);
             }
         }
 
         var startButton = document.getElementById('startButton');
-        startButton.addEventListener('click', function() {
+        startButton.addEventListener('click', function () {
             startButton.style.display = 'none';
             document.getElementById('canvasContainer').style.border = 'none';
             document.getElementById('canvasText').classList.add('hidden');
@@ -208,13 +265,13 @@
             }
             drawRandomStar();
             autoRotate();
-            intervalId = setInterval(function() {
+            intervalId = setInterval(function () {
                 createEnemy();
             }, 1000);
         });
 
         function drawRandomStar() {
-            var margin = 40; 
+            var margin = 40;
             starX = Math.random() * (canvas.width - 2 * margin) + margin;
             starY = Math.random() * (canvas.height - 2 * margin) + margin;
             update();
@@ -237,18 +294,21 @@
                 radius: Math.random() * 10 + 5,
                 color: getRandomColor(),
                 speed: speed,
-                speedX: Math.cos(angle) * speed, // 수정: speedX 및 speedY 추가
+                speedX: Math.cos(angle) * speed,
                 speedY: Math.sin(angle) * speed
             };
             enemyStack.push(enemy);
         }
-        
+
         function drawEnemies() {
             for (var i = 0; i < enemyStack.length; i++) {
                 var enemy = enemyStack[i];
-                moveTowardsCenter(enemy);
+                moveTowardsCenter(enemy, playerX, playerY); // 수정된 부분
                 drawCircle(enemy.x - playerX + canvas.width / 2, enemy.y - playerY + canvas.height / 2, enemy.radius, enemy.color);
-                if (isColliding(enemy)) {
+                if (hasShield && isCollidingWithShield(enemy)) {
+                    enemyStack.splice(i, 1);
+                    i--;
+                } else if (isCollidingWithPlayer(enemy)) {
                     enemyStack.splice(i, 1);
                     heartHealth--;
                     if (heartHealth <= 0) {
@@ -259,9 +319,9 @@
             }
         }
 
-        function moveTowardsCenter(enemy) {
-            var dx = canvas.width / 2 - enemy.x;
-            var dy = canvas.height / 2 - enemy.y;
+        function moveTowardsCenter(enemy, targetX, targetY) {
+            var dx = targetX - enemy.x; // 하트의 위치를 향하도록 수정
+            var dy = targetY - enemy.y; // 하트의 위치를 향하도록 수정
             var distance = Math.sqrt(dx * dx + dy * dy);
             var speed = enemy.speed;
             if (distance > 1) {
@@ -270,23 +330,75 @@
             }
         }
 
-        function isColliding(enemy) {
+        function isCollidingWithPlayer(enemy) {
             var dx = playerX - enemy.x;
             var dy = playerY - enemy.y;
             var distance = Math.sqrt(dx * dx + dy * dy);
-            return distance < enemy.radius + 30;
+
+            if (shieldActive) {
+                // 쉴드가 활성화되어 있으면 플레이어와 적의 거리를 쉴드의 반경까지로 계산합니다.
+                return distance < enemy.radius + shieldSize / 2;
+            } else {
+                // 쉴드가 비활성화되어 있으면 일반적인 플레이어와 적의 충돌을 검사합니다.
+                return distance < enemy.radius + 30;
+            }
+        }
+
+        function isCollidingWithShield(enemy) {
+            if (hasShield && shieldActive) {
+                var dx = playerX - enemy.x;
+                var dy = playerY - enemy.y;
+                var distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < enemy.radius + shieldSize;
+            }
+            return false;
         }
 
         function checkPlayerCollisionWithStar() {
             var dx = playerX - starX;
             var dy = playerY - starY;
             var distance = Math.sqrt(dx * dx + dy * dy);
-            var playerRadius = 30; 
-            var starRadius = 40; 
+            var playerRadius = 30;
+            var starRadius = 40;
 
             if (distance < playerRadius + starRadius) {
                 console.log("플레이어가 별에 내접했습니다!");
+                starCount++; // 별 개수 증가
+                if (starCount >= 1) {
+                    activateShield();
+                    spawnHeart(); // 하트 생성
+                }
+                drawRandomStar(); // 별의 위치를 재설정
             }
+        }
+
+        function spawnHeart() {
+            starCount--; // 별 개수 감소
+            shieldActive = true; // 쉴드 활성화
+            setTimeout(function() {
+                shieldActive = false; // 쉴드 비활성화
+            }, 3000); // 3초 후 쉴드 비활성화
+            console.log('Heart spawned!');
+        }
+
+        function activateShield() {
+            hasShield = true;
+            shieldActive = true;
+            shieldSize = 30;
+            var startTime = Date.now();
+            var duration = 3000;
+
+            function growShield() {
+                var elapsed = Date.now() - startTime;
+                if (elapsed < duration) {
+                    shieldSize = 30 + (elapsed / duration) * 70; // 30에서 100까지 증가
+                    requestAnimationFrame(growShield);
+                } else {
+                    shieldActive = false;
+                }
+            }
+
+            growShield();
         }
 
         function getRandomColor() {
@@ -306,6 +418,77 @@
             ctx.closePath();
         }
 
+        function fireHeart() {
+            if (starCount >= 1) {
+                starCount--;
+                var heart = {
+                    x: playerX,
+                    y: playerY,
+                    angle: playerAngle,
+                    speed: 5,
+                    duration: 3000,
+                    startTime: Date.now()
+                };
+                firedHearts.push(heart);
+                setTimeout(function () {
+                    var index = firedHearts.indexOf(heart);
+                    if (index !== -1) {
+                        firedHearts.splice(index, 1);
+                    }
+                }, heart.duration);
+
+            }
+        }
+
+        
+        function drawTriangle() {
+            var x = canvas.width / 2; // 삼각형의 X 좌표를 캔버스의 가로 중앙으로 설정
+            var y = canvas.height / 2; // 삼각형의 Y 좌표를 캔버스의 세로 중앙으로 설정
+            
+            ctx.beginPath();
+            ctx.moveTo(x, y - 30);
+            ctx.lineTo(x + 30, y + 30);
+            ctx.lineTo(x - 30, y + 30);
+            ctx.closePath();
+            ctx.fillStyle = 'green';
+            ctx.fill();
+        }
+
+        function drawFiredHearts() {
+            for (var i = 0; i < firedHearts.length; i++) {
+                var heart = firedHearts[i];
+                heart.x += Math.cos(heart.angle) * heart.speed;
+                heart.y += Math.sin(heart.angle) * heart.speed;
+                drawHeart(heart.x, heart.y, heart.angle); // 플레이어의 위치와의 상대적인 좌표에서 그리는 것이 아니라 실제 좌표를 사용합니다.
+
+                if (shieldActive) {
+                    // 쉴드 활성화 중에는 모든 적을 막습니다.
+                    continue;
+                }
+
+                checkHeartCollisionWithEnemies(heart);
+            }
+        }
+
+        function checkHeartCollisionWithEnemies(heart) {
+            if (firedHearts.length > 0) {
+                for (var i = 0; i < enemyStack.length; i++) {
+                    var enemy = enemyStack[i];
+                    var dx = heart.x - enemy.x;
+                    var dy = heart.y - enemy.y;
+                    var distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < enemy.radius + 30) {
+                        // 파란색 하트에 닿으면 적을 제거합니다.
+                        enemyStack.splice(i, 1);
+                        // 발사된 하트 배열에서 제거합니다.
+                        firedHearts.splice(firedHearts.indexOf(heart), 1);
+                        i--; // 현재의 인덱스를 감소시켜 다음 적을 확인할 수 있도록 합니다.
+                        return; // 하트는 한 번에 한 적에게만 닿을 수 있습니다.
+                    }
+                }
+            }
+        }
+
         function endGame() {
             clearCanvas();
             gameEnded = true;
@@ -320,6 +503,9 @@
             document.getElementById('canvasText').style.color = 'rgb(255, 255, 255)';
             enemyStack = []; // 스택 초기화
             heartHealth = 3;
+            starCount = 0; // 별 개수 초기화
+            hasShield = false; // 보호막 상태 초기화
+            firedHearts = []; // 발사된 하트 초기화
             startButton.addEventListener('click', startGame);
         }
 
@@ -333,9 +519,24 @@
             }
             drawRandomStar();
             autoRotate();
-            intervalId = setInterval(function() {
+            intervalId = setInterval(function () {
                 createEnemy();
             }, 1000);
+            drawTriangle(); // 게임이 시작될 때 삼각형을 중앙에 그립니다.
+            document.getElementById('canvasContainer').style.border = '1px solid rgb(255,255, 255)';
+            gameEnded = false;
+            startButton.style.display = 'none';
+            document.getElementById('canvasText').classList.add('hidden');
+            var enemyCount = Math.floor(Math.random() * 11) + 5;
+            for (var i = 0; i < enemyCount; i++) {
+                createEnemy();
+            }
+            drawRandomStar();
+            autoRotate();
+            intervalId = setInterval(function () {
+                createEnemy();
+            }, 1000);
+            drawTriangle(); // 게임이 시작될 때 삼각형을 중앙에 그립니다.
             document.getElementById('canvasContainer').style.border = '1px solid rgb(255, 255, 255)';
             document.getElementById('canvasContainer').style.backgroundColor = 'rgb(72, 153, 242)';
             document.getElementById('canvasText').style.color = 'white';
@@ -343,4 +544,6 @@
         }
     </script>
 </body>
+
 </html>
+

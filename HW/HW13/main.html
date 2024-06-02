@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>삼각형 색 변경 및 회전</title>
+<style>
+    .triangle {
+        width: 0;
+        height: 0;
+        border-left: 200px solid transparent;
+        border-right: 200px solid transparent;
+        border-bottom: 346.4px solid #ff0000; /* 초기 삼각형의 색상을 변경할 수 있습니다. */
+        position: absolute;
+        top: calc(50% - 173.2px);
+        left: calc(50% - 100px);
+        transform-origin: center;
+        animation: rotateTriangle 5s linear infinite; /* 회전 애니메이션 */
+    }
+
+    @keyframes rotateTriangle {
+        from {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+        to {
+            transform: translate(-50%, -50%) rotate(360deg);
+        }
+    }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<script>
+    // DOM 요소 가져오기
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d'); // 캔버스 컨텍스트 가져오기
+    const triangle = document.createElement('div');
+    triangle.classList.add('triangle');
+    document.body.appendChild(triangle); // 삼각형을 body에 추가
+
+    // 클릭 이벤트 리스너 추가
+    triangle.addEventListener('click', function(event) {
+        // 클릭한 위치가 삼각형의 내부인지 확인
+        const isInside = isPointInsideTriangle(event.clientX, event.clientY);
+
+        // 삼각형의 색상 변경
+        if (isInside) {
+            // 클릭한 위치가 삼각형의 내부인 경우
+            // 랜덤한 색상 생성
+            const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+            triangle.style.borderBottomColor = randomColor; // 랜덤 색상으로 변경
+        }
+    });
+
+    // 클릭한 좌표가 삼각형의 내부에 있는지 확인하는 함수
+    function isPointInsideTriangle(x, y) {
+        const vertex1 = { x: canvas.offsetLeft + 100, y: canvas.offsetTop + 300 };
+        const vertex2 = { x: canvas.offsetLeft + 400, y: canvas.offsetTop + 300 };
+        const vertex3 = { x: canvas.offsetLeft + 250, y: canvas.offsetTop + 0 };
+
+        const areaOrig = triangleArea(vertex1, vertex2, vertex3);
+        const area1 = triangleArea({ x, y }, vertex2, vertex3);
+        const area2 = triangleArea(vertex1, { x, y }, vertex3);
+        const area3 = triangleArea(vertex1, vertex2, { x, y });
+        const totalArea = area1 + area2 + area3;
+
+        return Math.abs(areaOrig - totalArea) < 0.0001;
+    }
+
+    // 삼각형의 넓이를 계산하는 함수
+    function triangleArea(p1, p2, p3) {
+        return Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-p1.y) + p3.x*(p1.y-p2.y)) / 2);
+    }
+</script>
+
+</body>
