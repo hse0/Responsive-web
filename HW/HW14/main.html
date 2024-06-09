@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive-web_HW14</title>
+</head>
+<body>
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        let angle = 0; // 회전 각도
+        let isInside = false; // 삼각형 내부 클릭 여부
+        let randomColor = getRandomColor(); // 랜덤한 색상 미리 생성
+
+        // 삼각형의 원래 좌표
+        const triangle = [
+            { x: -100, y: 0 },
+            { x: 0, y: -100 },
+            { x: 100, y: 0 }
+        ];
+
+        // 애니메이션 루프 설정
+        function draw() {
+            ctx.clearRect(0, 0, width, height); // 캔버스 전체 지우기
+
+            // 좌표계의 중앙을 (0,0)으로 설정
+            ctx.save();
+            ctx.translate(centerX, centerY);
+
+            // 삼각형 회전
+            ctx.rotate(angle * Math.PI / 180);
+
+            // 클릭된 좌표가 삼각형 내부에 있을 때 랜덤한 색상으로 삼각형 채우기
+            if (isInside) {
+                ctx.fillStyle = randomColor; // 미리 생성된 랜덤한 색상 사용
+            } else {
+                ctx.fillStyle = 'lightgray'; // 일반 색상
+            }
+
+            // 삼각형 그리기
+            ctx.beginPath();
+            ctx.moveTo(triangle[0].x, triangle[0].y);
+            ctx.lineTo(triangle[1].x, triangle[1].y);
+            ctx.lineTo(triangle[2].x, triangle[2].y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore(); // 상태 복원
+
+            angle += 1; // 각도 증가 (회전 속도 조절 가능)
+
+            requestAnimationFrame(draw); // 다음 프레임 요청
+        }
+
+        // 애니메이션 시작
+        draw();
+
+        // 마우스 클릭 이벤트 핸들러
+        canvas.addEventListener('click', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left - centerX;
+            const mouseY = event.clientY - rect.top - centerY;
+
+            // 클릭된 좌표를 삼각형의 회전에 맞춰 변환
+            const rotatedPoint = rotatePoint(mouseX, mouseY, -angle);
+            const x = rotatedPoint.x;
+            const y = rotatedPoint.y;
+
+            // 클릭된 좌표가 삼각형 내부에 있는지 확인
+            isInside = isPointInRotatedTriangle(x, y, angle);
+
+            // 클릭할 때마다 새로운 랜덤한 색상 생성
+            randomColor = getRandomColor();
+
+            // 클릭된 좌표가 삼각형 내부에 있으면 로그 출력
+            if (isInside) {
+                console.log(`inside the triangle.`);
+            }
+        });
+
+        // 점을 회전시키는 함수
+        function rotatePoint(x, y, angle) {
+            const radians = angle * Math.PI / 180;
+            const cos = Math.cos(radians);
+            const sin = Math.sin(radians);
+            const nx = cos * x - sin * y;
+            const ny = sin * x + cos * y;
+            return { x: nx, y: ny };
+        }
+
+        // 점이 회전된 삼각형 내부에 있는지 확인
+        function isPointInRotatedTriangle(x, y, angle) {
+            // 삼각형의 원래 좌표
+            const p1 = triangle[0];
+            const p2 = triangle[1];
+            const p3 = triangle[2];
+
+            // 삼각형의 각 변의 기울기-절편 방정식 계산
+            const line1 = getLineEquation(p1, p2);
+            const line2 = getLineEquation(p2, p3);
+            const line3 = getLineEquation(p3, p1);
+
+            // 점이 삼각형 내부에 있는지 확인
+            return isPointAboveLine(x, y, line1) && 
+                   isPointAboveLine(x, y, line2) && 
+                   isPointBelowLine(x, y, line3);
+        }
+
+        // 기울기-절편 방정식 구하는 함수
+        function getLineEquation(p1, p2) {
+            const m = (p2.y - p1.y) / (p2.x - p1.x);
+            const b = p1.y - m * p1.x;
+            return { m, b };
+        }
+
+        // 점이 직선 위에 있는지 확인하는 함수
+        function isPointAboveLine(x, y, line) {
+            return y >= line.m * x + line.b;
+        }
+
+        // 점이 직선 아래에 있는지 확인하는 함수
+        function isPointBelowLine(x, y, line) {
+            return y <= line.m * x + line.b;
+        }
+
+        // 랜덤한 RGB 색상을 반환하는 함수
+        function getRandomColor() {
+            const r = Math.floor(Math.random() * 256);
+            const g = Math.floor(Math.random() * 256);
+            const b = Math.floor(Math.random() * 256);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+    </script>
+</body>
+</html>
