@@ -206,7 +206,7 @@
             ctx.moveTo(0, -size);
             ctx.bezierCurveTo(size * 0.67, -size * 1.67, size * 2, -size * 0.67, 0, size);
             ctx.bezierCurveTo(-size * 2, -size * 0.67, -size * 0.67, -size * 1.67, 0, -size);
-            ctx.strokeStyle = 'blue';
+            ctx.strokeStyle = 'lightblue';
             ctx.lineWidth = 5;
             ctx.stroke();
             ctx.restore();
@@ -250,21 +250,7 @@
         }
 
         var startButton = document.getElementById('startButton');
-        startButton.addEventListener('click', function () {
-            startButton.style.display = 'none';
-            document.getElementById('canvasContainer').style.border = 'none';
-            document.getElementById('canvasText').classList.add('hidden');
-            var enemyCount = Math.floor(Math.random() * 11) + 5;
-            for (var i = 0; i < enemyCount; i++) {
-                createEnemy();
-            }
-            drawRandomStar();
-            drawRandomSmallHeart();
-            autoRotate();
-            intervalId = setInterval(function () {
-                createEnemy();
-            }, 1000);
-        });
+        startButton.addEventListener('click', startGame);
 
         function drawRandomStar() {
             var margin = 40;
@@ -350,7 +336,6 @@
             var starRadius = 40;
 
             if (distance < playerRadius + starRadius) {
-                console.log("플레이어가 별에 내접했습니다!");
                 activateShield();
                 drawRandomStar();
             }
@@ -364,7 +349,6 @@
             var smallHeartRadius = 20;
 
             if (distance < playerRadius + smallHeartRadius) {
-                console.log("플레이어가 작은 하트에 내접했습니다!");
                 heartHealth++;
                 drawRandomSmallHeart();
             }
@@ -386,10 +370,8 @@
                     shieldActive = false;
                 }
             }
-
             growShield();
         }
-
         function getRandomColor() {
             var letters = '0123456789ABCDEF';
             var color = '#';
@@ -444,6 +426,7 @@
             heartHealth = 3;
             hasShield = false;
             enemyHitCount = 0;
+            startButton.addEventListener('click', startGame);
         }
     </script>
 </body>
